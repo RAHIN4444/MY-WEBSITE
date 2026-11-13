@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP AI স্পেস ডিজিটাল স্টোর</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #090a0f;
+            margin: 0;
+            padding: 20px;
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* স্পেস ক্যানভাস ব্যাকগ্রাউন্ড - ঝলমলে তারা অ্যানিমেশন */
+        #space-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .main-container {
+            max-width: 900px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.25);
+            margin: 20px auto;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+        }
+
+        .delivery-container {
+            max-width: 550px;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 0 35px rgba(16, 185, 129, 0.3);
+            margin: 40px auto;
+            border: 1px solid #10b981;
+        }
+
+        .vip-crown {
+            text-align: center;
+            font-size: 12px;
+            letter-spacing: 3px;
+            color: #facc15;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            text-shadow: 0 0 8px rgba(250, 204, 21, 0.5);
+        }
+
+        h2 {
+            text-align: center;
+            color: #38bdf8;
+            margin-top: 0;
+            font-size: 26px;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+        }
+
+        .subtitle { text-align: center; color: #94a3b8; margin-bottom: 25px; font-size: 14px; }
+
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .product-card {
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 18px;
+            border-radius: 10px;
+            background: rgba(30, 41, 59, 0.75);
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+        }
+        .product-card:hover { border-color: #38bdf8; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(56, 189, 248, 0.3); }
+        .product-card.selected {
+            border: 2px solid #facc15;
+            background: rgba(250, 204, 21, 0.12);
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.3);
+        }
+        .badge {
+            position: absolute; top: 10px; right: 10px;
+            background: #0284c7;
+            color: #fff; font-size: 11px; padding: 3px 8px;
+            border-radius: 4px; font-weight: bold;
+        }
+        .product-card.selected .badge { background: #facc15; color: #0f172a; }
+        .product-card h3 { margin: 0 0 8px 0; color: #f8fafc; font-size: 18px; padding-right: 60px; }
+        .product-card p { margin: 0 0 12px 0; font-size: 13px; color: #94a3b8; line-height: 1.4; }
+        .card-price { font-size: 18px; color: #4ade80; font-weight: bold; }
+
+        .checkout-box {
+            background: rgba(15, 23, 42, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+        }
+        label { display: block; margin-top: 14px; font-weight: bold; color: #cbd5e1; }
+        select, input {
+            width: 100%; padding: 12px; margin-top: 6px;
+            border: 1px solid #475569; border-radius: 6px;
+            background: rgba(30, 41, 59, 0.9); color: #fff; font-size: 15px;
+            outline: none;
+        }
+        select:focus, input:focus { border-color: #38bdf8; box-shadow: 0 0 8px rgba(56,189,248,0.4); }
+        .price-tag {
+            font-size: 22px; color: #facc15; font-weight: bold;
+            margin-top: 15px; padding: 10px;
+            background: rgba(250, 204, 21, 0.08);
+            border-radius: 6px; text-align: center;
+            border: 1px dashed #facc15;
+        }
+        .payment-methods { display: flex; gap: 10px; margin-top: 8px; }
+        .payment-btn {
+            flex: 1; padding: 12px; text-align: center;
+            border: 1px solid #475569; border-radius: 6px;
+            cursor: pointer; font-weight: bold; background: #1e293b; transition: 0.2s;
+        }
+        .payment-btn.active { border-color: #38bdf8; background: #0284c7; color: #fff; }
+        .buy-btn {
+            background: #10b981; color: white; border: none; padding: 15px; width: 100%;
+            font-size: 17px; border-radius: 6px; cursor: pointer;
+            margin-top: 20px; font-weight: bold; transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        .buy-btn:hover { background: #059669; transform: translateY(-2px); }
+
+        .ai-status-bar {
+            display: none; margin-top: 12px; padding: 12px;
+            border-radius: 6px; font-size: 14px;
+            background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5;
+        }
+        .ai-box {
+            background: #0f172a; border: 1px dashed #38bdf8;
+            padding: 15px; border-radius: 8px; text-align: center; margin-top: 15px;
+        }
+        .pass-display {
+            font-size: 24px; font-weight: bold; color: #facc15;
+            letter-spacing: 2px; margin: 10px 0; background: #1e293b;
+            padding: 8px; border-radius: 5px; border: 1px solid #334155;
+        }
+        .final-file-box {
+            display: none; background: #064e3b;
+            border: 1px solid #10b981; padding: 18px;
+            border-radius: 8px; text-align: center; margin-top: 15px;
+        }
+        .download-link-btn {
+            background: #38bdf8; color: #0f172a; padding: 12px 24px;
+            text-decoration: none; border-radius: 6px; display: inline-block;
+            font-weight: bold; margin-top: 10px; font-size: 15px;
+        }
+        .back-btn {
+            background: transparent; color: #94a3b8; border: 1px solid #475569;
+            padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-top: 15px;
+        }
+
+        /* WhatsApp & AI Support Widget */
+        .ai-widget-container {
+            position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+            display: flex; flex-direction: column; align-items: flex-end;
+        }
+        .ai-chat-popup {
+            display: none; width: 300px;
+            background: #0f172a;
+            border: 1px solid #38bdf8;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        .ai-chat-header {
+            background: #0284c7; padding: 10px 12px; font-weight: bold; font-size: 13px;
+            display: flex; justify-content: space-between; align-items: center; color: #fff;
+        }
+        .ai-chat-body { padding: 12px; font-size: 13px; color: #e2e8f0; max-height: 250px; overflow-y: auto; }
+        .ai-msg {
+            background: rgba(56, 189, 248, 0.15);
+            border-left: 3px solid #38bdf8;
+            padding: 8px 10px; border-radius: 4px; margin-bottom: 8px; line-height: 1.4;
+        }
+        .user-msg {
+            background: rgba(16, 185, 129, 0.15);
+            border-left: 3px solid #10b981;
+            padding: 8px 10px; border-radius: 4px; margin-bottom: 8px; line-height: 1.4; text-align: right;
+        }
+        .ai-chat-footer {
+            display: flex; padding: 8px; background: #1e293b; border-top: 1px solid #334155;
+        }
+        .ai-chat-footer input {
+            flex: 1; padding: 6px 10px; font-size: 13px; margin-top: 0; border-radius: 4px;
+        }
+        .ai-chat-footer button {
+            background: #38bdf8; color: #0f172a; border: none; padding: 6px 12px; margin-left: 6px; border-radius: 4px; font-weight: bold; cursor: pointer;
+        }
+        .ai-action-btn {
+            display: block; width: 100%; text-align: center;
+            background: #25d366; color: #fff; text-decoration: none;
+            padding: 9px; border-radius: 6px; font-weight: bold;
+            margin-top: 6px;
+        }
+        .ai-floating-btn {
+            width: 60px; height: 60px; border-radius: 50%;
+            background: #25d366;
+            border: 2px solid #fff;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s;
+        }
+        .ai-floating-btn:hover { transform: scale(1.1); }
+        .ai-floating-btn img { width: 34px; height: 34px; }
+    </style>
+</head>
+<body>
+
+<!-- ঝলমলে স্পেস ও তারা অ্যানিমেশনের ক্যানভাস -->
+<canvas id="space-canvas"></canvas>
+
+<div class="main-container" id="store-section">
+    <div class="vip-crown">★ VIP SPACE EDITION ★</div>
+    <h2>⚡ প্রিমিয়াম AI ডিজিটাল স্টোর</h2>
+    <p class="subtitle">মহাকাশের গতিতে নিরাপদ ও অটোমেটেড ফাইল ডেলিভারি সিস্টেম</p>
+
+    <div class="products-grid" id="product-list"></div>
+
+    <div class="checkout-box">
+        <div style="font-size: 16px; color: #38bdf8; font-weight: bold; margin-bottom: 10px;">
+            নির্বাচিত ফাইল: <span id="selected-product-name" style="color: #facc15;">headshot zip file</span>
+        </div>
+
+        <label for="duration">মেয়াদ সিলেক্ট করুন:</label>
+        <select id="duration" onchange="updatePrice()">
+            <option value="1">১ দিন (ট্রায়াল প্যাক)</option>
+            <option value="2">৭ দিন (সাপ্তাহিক প্যাক)</option>
+            <option value="3" selected>পার্মানেন্ট (আজীবন মেয়াদ)</option>
+        </select>
+
+        <div class="price-tag" id="display-price">সর্বমোট মূল্য: ৩৫০ টাকা</div>
+
+        <label>পেমেন্ট মাধ্যম বেছে নিন:</label>
+        <div class="payment-methods">
+            <div class="payment-btn active" onclick="selectPayment('bKash', this)">বিকাশ</div>
+            <div class="payment-btn" onclick="selectPayment('Nagad', this)">নগদ</div>
+            <div class="payment-btn" onclick="selectPayment('Card', this)">ক্রেডিট কার্ড</div>
+        </div>
+
+        <div id="payment-info" style="margin-top: 12px; font-size: 14px; background: #334155; padding: 12px; border-radius: 6px; color: #fde047;">
+            বিকাশ পার্সোনাল: 01796650897 নাম্বারে সেন্ড মানি করে নিচে সঠিক TrxID দিন।
+        </div>
+
+        <label for="trxid">ট্রানজেকশন আইডি (TrxID):</label>
+        <input type="text" id="trxid" placeholder="যেমন: 9N74K8X...">
+
+        <div class="ai-status-bar" id="ai-error-box"></div>
+
+        <button class="buy-btn" onclick="processOrder()">🛡️ পেমেন্ট ভেরিফাই করুন</button>
+    </div>
+</div>
+
+<div class="delivery-container" id="delivery-section" style="display: none;">
+    <div class="vip-crown">★ VERIFIED BY AI ★</div>
+    <h2>🤖 সিকিউরড ফাইল আনলক</h2>
+    <p style="text-align: center; color: #4ade80; font-size: 14px;">পেমেন্ট ভেরিফাই হয়েছে! নিচের পাসওয়ার্ডটি দিয়ে ফাইলটি আনলক করুন:</p>
+    
+    <div class="ai-box">
+        <span style="font-size: 13px; color: #94a3b8;">আপনার ইউনিক AI পাসওয়ার্ড:</span>
+        <div class="pass-display" id="generated-pass">---</div>
+        <small style="color: #cbd5e1;">(পাসওয়ার্ডটি কপি করে নিচের ঘরে বসান)</small>
+    </div>
+
+    <div style="margin-top: 15px;">
+        <label for="user-pass">পাসওয়ার্ড দিন:</label>
+        <input type="text" id="user-pass" placeholder="সঠিক পাসওয়ার্ড এখানে পেস্ট করুন..." oninput="checkPassword()">
+    </div>
+
+    <div class="final-file-box" id="final-file">
+        <h3 style="margin-top: 0; color: #6ee7b7;">🔓 ফাইল আনলক সফল হয়েছে!</h3>
+        <p style="font-size: 14px; margin-bottom: 5px;">ফাইল: <strong id="unlocked-file-title"></strong></p>
+        <p style="font-size: 13px; color: #cbd5e1;">আপনার ফাইলটি ডাউনলোডের জন্য প্রস্তুত।</p>
+        <a id="final-download-link" href="#" target="_blank" class="download-link-btn">📥 ফাইল ওপেন / ডাউনলোড করুন</a>
+    </div>
+
+    <div style="text-align: center;">
+        <button class="back-btn" onclick="goBack()">← স্টোরে ফিরে যান</button>
+    </div>
+</div>
+
+<!-- এআই ও হোয়াটসঅ্যাপ চ্যাট উইজেট -->
+<div class="ai-widget-container">
+    <div class="ai-chat-popup" id="ai-popup">
+        <div class="ai-chat-header">
+            <span>🤖 AI অটো সাপোর্ট অ্যাসিস্ট্যান্ট</span>
+            <span style="cursor:pointer;" onclick="toggleAIChat()">✖</span>
+        </div>
+        <div class="ai-chat-body" id="chat-messages">
+            <div class="ai-msg">
+                হ্যালো! আমি রাইনের এআই অ্যাসিস্ট্যান্ট। পেমেন্ট, TrxID বা ফাইল ডাউনলোড করতে কোনো সমস্যা হলে আমাকে এখানে বলতে পারেন অথবা সরাসরি হোয়াটসঅ্যাপে যোগাযোগ করতে পারেন।
+            </div>
+        </div>
+        <div class="ai-chat-footer">
+            <input type="text" id="user-chat-input" placeholder="আপনার সমস্যা লিখুন..." onkeypress="handleChatEnter(event)">
+            <button onclick="sendUserMessage()">পাঠান</button>
+        </div>
+        <div style="padding: 0 10px 10px 10px;">
+            <a href="https://chat.whatsapp.com/I5JoVU0Lj2z7AFKqr1UmeJ?s=cl&p=a&iam=2" target="_blank" class="ai-action-btn">
+                💬 সরাসরি WhatsApp সাপোর্টে যান
+            </a>
+        </div>
+    </div>
+    <div class="ai-floating-btn" onclick="toggleAIChat()" title="AI Support">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="Support">
+    </div>
+</div>
+
+<script>
+    // মহাকাশ ক্যানভাস অ্যানিমেশন
+    const canvas = document.getElementById('space-canvas');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    for (let i = 0; i < 140; i++) {
+        stars.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            radius: Math.random() * 1.6 + 0.4,
+            alpha: Math.random(),
+            speed: Math.random() * 0.3 + 0.05,
+            twinkle: Math.random() * 0.02 + 0.005
+        });
+    }
+
+    function animateSpace() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        stars.forEach(star => {
+            star.alpha += star.twinkle;
+            if (star.alpha > 1 || star.alpha < 0.2) star.twinkle = -star.twinkle;
+            star.y -= star.speed;
+            if (star.y < 0) {
+                star.y = canvas.height;
+                star.x = Math.random() * canvas.width;
+            }
+            ctx.beginPath();
+            ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+            ctx.fill();
+        });
+        requestAnimationFrame(animateSpace);
+    }
+    animateSpace();
+
+    // প্রোডাক্ট ডেটা
+    const productsData = [
+        {
+            id: 1,
+            name: "headshot zip file",
+            desc: "এটা কাজ না করলে আমাদের হোয়াটসঅ্যাপে যোগাযোগ করতে পারেন",
+            price1Day: 50,
+            price7Day: 150,
+            pricePerm: 350,
+            fileLink: "https://t.me/c/3830559477/372"
+        },
+        {
+            id: 2,
+            name: "ভিআইপি হেডশট সেনসিটিভিটি ফাইল",
+            desc: "সব ডিভাইসের জন্য স্মুথ গেমপ্লে এবং হাই সেনসিটিভিটি।",
+            price1Day: 80,
+            price7Day: 220,
+            pricePerm: 490,
+            fileLink: "https://t.me/c/3869612458/15526"
+        },
+        {
+            id: 3,
+            name: "FF H4X",
+            desc: "প্যানেল কাজ না করলে আমাদের সঙ্গে যোগাযোগ করেন",
+            price1Day: 60,
+            price7Day: 180,
+            pricePerm: 450,
+            fileLink: "https://t.me/c/3830559477/373"
+        },
+        {
+            id: 4,
+            name: "ZXD MODS",
+            desc: "কোন সমস্যা হলে আমাদের সঙ্গে যোগাযোগ করবেন",
+            price1Day: 120,
+            price7Day: 350,
+            pricePerm: 750,
+            fileLink: "https://t.me/c/3830559477/374"
+        },
+        {
+            id: 5,
+            name: "RAHIN SMS PRO",
+            desc: "এটা দিয়ে আপনি সবার সঙ্গে মজা করতে পারবেন আনলিমিটেড মেসেজ পাঠিয়ে কোন সমস্যা হলে আমাদের সঙ্গে যোগাযোগ করবেন",
+            price1Day: 150,
+            price7Day: 450,
+            pricePerm: 950,
+            fileLink: "https://t.me/c/3830559477/375"
+        },
+        {
+            id: 6,
+            name: "PRO CONFIG PACK",
+            desc: "সকল নতুন আপডেটের জন্য স্পেশাল কনফিগারেশন ফাইল।",
+            price1Day: 100,
+            price7Day: 250,
+            pricePerm: 550,
+            fileLink: "https://t.me/c/3830559477/376"
+        }
+    ];
+
+    let selectedProduct = productsData[0];
+    let dynamicAiPassword = "";
+
+    function renderProducts() {
+        const listContainer = document.getElementById("product-list");
+        if (!listContainer) return;
+        listContainer.innerHTML = "";
+        productsData.forEach((product) => {
+            const isSelected = product.id === selectedProduct.id;
+            const card = document.createElement("div");
+            card.className = "product-card" + (isSelected ? " selected" : "");
+            card.onclick = () => selectProduct(product.id);
+            card.innerHTML = `
+                <span class="badge">${isSelected ? "✓ সিলেক্টেড" : "সিলেক্ট"}</span>
+                <h3>${product.name}</h3>
+                <p>${product.desc}</p>
+                <div class="card-price">স্থায়ী মূল্য: ${product.pricePerm} টাকা</div>
+            `;
+            listContainer.appendChild(card);
+        });
+    }
+
+    function selectProduct(id) {
+        selectedProduct = productsData.find(p => p.id === id);
+        document.getElementById("selected-product-name").innerText = selectedProduct.name;
+        renderProducts();
+        updatePrice();
+    }
+
+    function updatePrice() {
+        const durationType = document.getElementById("duration").value;
+        let finalPrice = selectedProduct.pricePerm;
+        if (durationType === "1") finalPrice = selectedProduct.price1Day;
+        else if (durationType === "2") finalPrice = selectedProduct.price7Day;
+        document.getElementById("display-price").innerText = "সর্বমোট মূল্য: " + finalPrice + " টাকা";
+    }
+
+    function selectPayment(method, element) {
+        document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active'));
+        element.classList.add('active');
+        let infoText = "বিকাশ পার্সোনাল: 01796650897 নাম্বারে সেন্ড মানি করে নিচে সঠিক TrxID দিন।";
+        if(method === 'Nagad') infoText = "নগদ পার্সোনাল: 01796650897 নাম্বারে সেন্ড মানি করে নিচে সঠিক TrxID দিন।";
+        else if(method === 'Card') infoText = "কার্ডের মাধ্যমে পেমেন্ট করে ট্রানজেকশন আইডি দিন।";
+        document.getElementById("payment-info").innerText = infoText;
+    }
+
+    // অটোমেটিক এআই চ্যাটবট লজিক
+    function toggleAIChat() {
+        const popup = document.getElementById("ai-popup");
+        popup.style.display = (popup.style.display === "block") ? "none" : "block";
+    }
+
+    function handleChatEnter(e) {
+        if (e.key === "Enter") {
+            sendUserMessage();
+        }
+    }
+
+    function sendUserMessage() {
+        const inputField = document.getElementById("user-chat-input");
+        const msgText = inputField.value.trim();
+        if (msgText === "") return;
+
+        const chatBody = document.getElementById("chat-messages");
+        
+        // ইউজারের মেসেজ যোগ করা
+        chatBody.innerHTML += `<div class="user-msg">${msgText}</div>`;
+        inputField.value = "";
+        chatBody.scrollTop = chatBody.scrollHeight;
+
+        // এআই অটো রেসপন্স লজিক
+        setTimeout(() => {
+            let aiReply = "আপনার কথা বুঝতে পেরেছি। পেমেন্ট বা TrxID নিয়ে সমস্যা হলে অনুগ্রহ করে আমাদের WhatsApp সাপোর্টে যোগাযোগ করুন।";
+            const lowerMsg =
